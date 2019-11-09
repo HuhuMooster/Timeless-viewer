@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form method="POST" action="/search">
+        Name: <input type="text" name="name" required>&nbsp;
+        Seed (optional): <input type="text" name="seed">&nbsp;
+        Socket ID (optional, between 1 and 21): <input type="text" name="socketID">&nbsp;
+        <input type="submit" value="Search">
+    </form>
+    <hr>
+    {% for jewel in jewels %}
+    <div class="wrapper">
+        <p class="jewel">{{ jewel.name }} #{{ jewel.seed }} {{ jewel.variation }} socketed at {{ jewel.socket_id }}:</p>
+        <div class="first">
+            <p>Added nodes:</p>
+            {% for node in jewel.added_nodes %}
+            <li>{{ node }}</li>
+            {% endfor %}
+        </div>
+        <div class="second">
+            <p>Summed mods:</p>
+            {% for mod, val in jewel.summed.items() %}
+            <li>{{ mod }}: {{ val }}</li>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% endblock %}

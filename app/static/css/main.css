@@ -1,0 +1,27 @@
+body {
+    color: white;
+}
+.wrapper {
+    width: 1400px;
+    overflow: hidden;
+}
+.first {
+    width: 700px;
+    float: left; 
+}
+.second {
+    overflow: hidden;
+}
+.jewel {
+    font-size: 16pt;
+}
+li {
+    margin: 1px 0;
+}
+form, input {
+    display: inline-block;
+    vertical-align: baseline;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
