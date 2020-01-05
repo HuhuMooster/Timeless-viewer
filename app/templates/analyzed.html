@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for date, names in latest_additions.items() %}
+    <div class="wrapper">
+        <p class="jewel">{{ date }}:</p>
+
+        {% for name, seeds in names.items() %}
+        <div>
+            <p>{{ name }}:</p>
+
+            {% for seed in seeds %}
+            <li>{{ seed }}</li>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+{% endblock %}

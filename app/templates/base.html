@@ -11,7 +11,9 @@
         <div>
             Timeless jewels:&nbsp;&nbsp;
             <a href="{{ url_for('index') }}">Home</a>&nbsp;&nbsp;
-            <a href="https://i.imgur.com/yNDGmVf.png" target="blank_">Jewel socket positions</a><br><br>
+            <a href="https://i.imgur.com/yNDGmVf.png" target="blank_">Jewel socket positions</a>&nbsp;&nbsp;
+            <a href="{{ url_for('analyzed') }}" target="blank_">Analyzed jewels</a>&nbsp;&nbsp;
+            <br><br>
         </div>
         {% block content %}{% endblock %}
     </body>

@@ -26,3 +26,20 @@ def search():
 
     jewels = mongo.db.jewels.find(search_dict)
     return render_template("index.html", title=title, jewels=jewels)
+
+@app.route('/analyzed', methods=['GET'])
+def analyzed():
+    title = "Analyzed by date"
+    latest_additions = {}
+    for jewel in mongo.db.jewels.find():
+        date = jewel['created'].strftime("%d.%m.%Y.")
+        name = jewel['name']
+        seed = jewel['seed']
+        if date not in latest_additions.keys():
+            latest_additions[date] = {}
+        if name not in latest_additions[date].keys():
+            latest_additions[date][name] = []
+        if seed not in latest_additions[date][name]:
+            latest_additions[date][name].append(seed)
+
+    return render_template("analyzed.html", title=title, latest_additions=latest_additions)
