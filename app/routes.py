@@ -11,20 +11,24 @@ def index():
 
 @app.route('/search', methods=['POST'])
 def search():
+    jewels = []
     name = str(request.form.get("name")).title()
-    seed = request.form.get("seed")
-    seed = int(seed) if seed else None
-    socket_id = request.form.get("socketID")
-    socket_id = int(socket_id) if socket_id and 1 <= int(socket_id) <= 21 else None
+    seeds = request.form.get("seed")
+    socket_ids = request.form.get("socketID")
     title = f"Timeless jewel viewer: {name}"
-    title += f" #{seed}" if seed else ""
+    title += f" {seeds}" if seeds else ""
+    
+    for socket_id in socket_ids.split(','):
+        if socket_id and not (1 <= int(socket_id) <= 21):
+            continue
+        for seed in seeds.split(','):
+            search_dict = {}
+            for field, value in zip(["name", "seed", "socket_id"], [name, int(seed) if seed else None, int(socket_id) if socket_id else None]):
+                if value is not None:
+                    search_dict[field] = value
+            for jewel in mongo.db.jewels.find(search_dict):
+                jewels.append(jewel)
 
-    search_dict = {}
-    for field, value in zip(["name", "seed", "socket_id"], [name, seed, socket_id]):
-        if value is not None:
-            search_dict[field] = value
-
-    jewels = mongo.db.jewels.find(search_dict)
     return render_template("index.html", title=title, jewels=jewels)
 
 @app.route('/analyzed', methods=['GET'])

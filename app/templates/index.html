@@ -3,8 +3,8 @@
 {% block content %}
     <form method="POST" action="/search">
         Name: <input type="text" name="name" required>&nbsp;
-        Seed (optional): <input type="text" name="seed">&nbsp;
-        Socket ID (optional, between 1 and 21): <input type="text" name="socketID">&nbsp;
+        Seeds (optional, comma separated): <input type="text" name="seed">&nbsp;
+        Socket IDs (optional, between 1 and 21, comma separated): <input type="text" name="socketID">&nbsp;
         <input type="submit" value="Search">
     </form>
     <hr>
