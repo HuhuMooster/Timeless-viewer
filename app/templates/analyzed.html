@@ -7,11 +7,7 @@
 
         {% for name, seeds in names.items() %}
         <div>
-            <p>{{ name }}:</p>
-
-            {% for seed in seeds %}
-            <li>{{ seed }}</li>
-            {% endfor %}
+            <p>{{ name }}: {{ seeds }}</p>
         </div>
         {% endfor %}
     </div>
