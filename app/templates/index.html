@@ -2,15 +2,27 @@
 
 {% block content %}
     <form method="POST" action="/search">
-        Name: <input type="text" name="name" required>&nbsp;
-        Seeds (optional, comma separated): <input type="text" name="seed">&nbsp;
-        Socket IDs (optional, between 1 and 21, comma separated): <input type="text" name="socketID">&nbsp;
+        <!-- Name: <input type="text" name="name" required>&nbsp; -->
+        Name:&nbsp;
+        <select name="name">
+            <option value="brutal restraint">Brutal Restraint</option>
+            <option value="elegant hubris">Elegant Hubris</option>
+            <option value="glorious vanity">Glorious Vanity</option>
+            <option value="lethal pride">Lethal Pride</option>
+            <option value="militant faith">Militant Faith</option>
+        </select>
+        Seeds (optional, comma separated):&nbsp; <input type="text" name="seed">&nbsp;
+        Socket IDs (optional, between 1 and 21, comma separated):&nbsp; <input type="text" name="socketID">&nbsp;
+        <br/><br/>
+        Affix to search for (optional):&nbsp; <input type="text" name="affix">&nbsp;&nbsp;
+        Minimum threshold:&nbsp; <input type="number" name="threshold">
+        <br/><br/>
         <input type="submit" value="Search">
     </form>
     <hr>
     {% for jewel in jewels %}
     <div class="wrapper">
-        <p class="jewel">{{ jewel.name }} #{{ jewel.seed }} {{ jewel.variation }} socketed at {{ jewel.socket_id }}:</p>
+        <p class="jewel">{{ jewel.name }} #{{ jewel.seed }} {{ jewel.variation }} socketed at {{ jewel.socket_id }} ({{ jewel.created }}):</p>
         <div class="first">
             <p>Added nodes:</p>
             {% for node in jewel.added_nodes %}
