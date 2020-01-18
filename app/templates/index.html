@@ -2,8 +2,9 @@
 
 {% block content %}
     <form method="POST" action="/search">
-        <!-- Name: <input type="text" name="name" required>&nbsp; -->
-        Name:&nbsp;
+        <link   rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/ui-darkness/jquery-ui.min.css">
+        <script type="text/javascript" src="http://code.jquery.com/jquery-latest.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js"></script>
         <select name="name">
             <option value="brutal restraint">Brutal Restraint</option>
             <option value="elegant hubris">Elegant Hubris</option>
@@ -11,14 +12,43 @@
             <option value="lethal pride">Lethal Pride</option>
             <option value="militant faith">Militant Faith</option>
         </select>
-        Seeds (optional, comma separated):&nbsp; <input type="text" name="seed">&nbsp;
-        Socket IDs (optional, between 1 and 21, comma separated):&nbsp; <input type="text" name="socketID">&nbsp;
-        <br/><br/>
-        Affix to search for (optional):&nbsp; <input type="text" name="affix">&nbsp;&nbsp;
-        Minimum threshold:&nbsp; <input type="number" name="threshold">
+        <input type="text" name="seeds" placeholder="Seeds (comma separated)">
+        <input type="text" name="socketIDs" placeholder="Socket IDs (comma separated)"><br/><br/>
+        <div id="affixes">
+            <input type="text" id="autocomplete" placeholder="Affix name" class="affix" name="affix">
+            <input type="number" placeholder="Minimum threshold" class="affix" name="threshold"><br/>
+        </div>
+        <!-- <button id="add_affix" type="button">Add affix</button> -->
         <br/><br/>
         <input type="submit" value="Search">
-    </form>
+        <script type="text/javascript">
+            $(function() {
+                $.ajax({
+                    url: '{{ url_for("autocomplete") }}'
+                }).done(function (data) {
+                    $('#autocomplete').autocomplete({
+                        source: data.json_list,
+                        minLength: 2
+                    });
+                });
+            });
+            // TODO: dynamically add search fields and make autocomplete work
+            // $(document).ready(function(){
+            //     var count_item = 0;
+            //     $("#add_affix").on("click", function(){
+            //         count_item += 1;
+            //         var affixInput = $('<input type="text" id="autocomplete" placeholder="Affix name" class="affix" autocomplete="off" onkeyup="autoComplete">&nbsp;</input>').attr({ name: "affix_"+count_item }).appendTo("#affixes");
+            //         var thresholdInput = $('<input type="number" placeholder="Minimum threshold" class="affix"></input><br/>').attr({ name: "threshold_"+count_item }).appendTo("#affixes");
+            //     });
+            //     $("#autcomplete").forEach(function() {
+            //         $(this).keyup(
+            //             function(){ 
+            //                 autoComplete;
+            //         });
+            //     });
+            // });
+        </script>
+    </form>    
     <hr>
     {% for jewel in jewels %}
     <div class="wrapper">

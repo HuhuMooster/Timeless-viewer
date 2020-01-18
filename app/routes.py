@@ -1,6 +1,6 @@
 import json
 
-from flask import render_template, request, url_for
+from flask import render_template, request, url_for, jsonify
 from flask_pymongo import PyMongo
 import pymongo
 from fuzzywuzzy import fuzz
@@ -8,31 +8,30 @@ from fuzzywuzzy import fuzz
 from app import app
 
 
-def load_from_json(filename):
-    try:
-        with open(f"{filename}.json", 'r+') as f:
-            try:
-                data = json.load(f)
-            except json.decoder.JSONDecodeError:
-                data = {}
-    except FileNotFoundError:
-        data = {}
-    return data
-
 mongo = PyMongo(app)
-summed_mods = load_from_json("summed_mods")
+summed_mods = []
+with open("affixes.txt") as f:
+    for line in f.readlines():
+        summed_mods.append(line[:-1])
+
+@app.route('/autocomplete',methods=['GET'])
+def autocomplete():
+    search = request.args.get('autocomplete')
+    return jsonify(json_list=summed_mods) 
 
 @app.route('/')
 def index():
     title = 'Timeless jewel viewer'
+    if request.method == "POST":
+        return jsonify(request.form)
     return render_template("index.html", title=title)
 
 @app.route('/search', methods=['POST'])
 def search():
     jewels = []
     name = str(request.form.get("name")).title()
-    seeds = request.form.get("seed")
-    socket_ids = request.form.get("socketID")
+    seeds = request.form.get("seeds")
+    socket_ids = request.form.get("socketIDs")
     affix = request.form.get("affix")
     threshold = request.form.get("threshold")
     mod = ""
@@ -40,21 +39,61 @@ def search():
     title = f"Timeless jewel viewer: {name}"
     title += f" {seeds}" if seeds else ""
 
+    constraints = {
+        "Brutal Restraint": {
+            "min": 500,
+            "max": 8000
+        },
+        "Elegant Hubris": {
+            "min": 2000,
+            "max": 160000
+        },
+        "Glorious Vanity": {
+            "min": 100,
+            "max": 8000
+        },
+        "Lethal Pride": {
+            "min": 10000,
+            "max": 18000
+        },
+        "Militant Faith": {
+            "min": 2000,
+            "max": 10000
+        }
+    }
+
     if affix:
         mod = search_by_affix(affix)
         if threshold:
             threshold = float(threshold)
         else:
             threshold = 0
+
+    affixes_thresholds = {}
+    # for mod, threshold in zip(affixes.split(','), thresholds.split(',')):
+    #     if mod:
+    #         mod = search_by_affix(mod)
+    affixes_thresholds[f'summed.{mod}'] = {"$gte": threshold} if threshold else None
     
     for socket_id in socket_ids.split(','):
+        # skip if socket_id is not valid
         if socket_id and not (1 <= int(socket_id) <= 21):
             continue
         for seed in seeds.split(','):
+            # skip if seed is not within roll range
+            # if seed != "" and not (constraints.get(name).get("min") <= int(seed) <= constraints.get(name).get("max")):
+            #     continue
+            # if seed != "" and name == "Elegant Hubris" and (int(seed) % 10 != 0):
+            #     continue
+
             search_dict = {}
-            for field, value in zip(["name", "seed", "socket_id", f'summed.{mod}' if mod else None], [name, int(seed) if seed else None, int(socket_id) if socket_id else None, {"$gte": threshold} if threshold else None]):
-                if field is not None and value is not None:
-                    search_dict[field] = value
+            search_dict["name"] = name
+            if seed:
+                search_dict["seed"] = int(seed)
+            if socket_id:
+                search_dict["socket_id"] = int(socket_id)
+            search_dict.update(affixes_thresholds)
+
             for jewel in mongo.db.jewels.find(search_dict).sort("created", pymongo.DESCENDING):
                 jewels.append(jewel)
 
@@ -81,7 +120,7 @@ def analyzed():
 def search_by_affix(affix):
     best_ratio = 0
     best_mod = ""
-    for mod in summed_mods.values():
+    for mod in summed_mods:
         simplified_mod = mod.lower()
         ratio = fuzz.partial_ratio(affix, simplified_mod)
         if ratio > best_ratio:

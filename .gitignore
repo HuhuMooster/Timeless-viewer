@@ -127,7 +127,8 @@ dmypy.json
 
 # test files
 mongo_test.py
+*mods.py
 timeless_viewer.bat
 seeds*.json
-# *mods.json
+*mods.json
 *timeless.json
