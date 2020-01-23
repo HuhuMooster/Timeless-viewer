@@ -1,1 +1,1 @@
-activate.bat & py timeless.py
+activate.bat & python timeless.py

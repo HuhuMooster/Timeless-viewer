@@ -7,7 +7,7 @@
 
         {% for name, seeds in names.items() %}
         <div>
-            <p>{{ name }}: {{ seeds }}</p>
+            <p>{{ name }}: {{ seeds|join(', ') }}</p>
         </div>
         {% endfor %}
     </div>

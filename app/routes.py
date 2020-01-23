@@ -14,11 +14,6 @@ with open("affixes.txt") as f:
     for line in f.readlines():
         summed_mods.append(line[:-1])
 
-@app.route('/autocomplete',methods=['GET'])
-def autocomplete():
-    search = request.args.get('autocomplete')
-    return jsonify(json_list=summed_mods) 
-
 @app.route('/')
 def index():
     title = 'Timeless jewel viewer'
@@ -32,9 +27,8 @@ def search():
     name = str(request.form.get("name")).title()
     seeds = request.form.get("seeds")
     socket_ids = request.form.get("socketIDs")
-    affix = request.form.get("affix")
-    threshold = request.form.get("threshold")
-    mod = ""
+    affixes = request.form.getlist("affixes")
+    thresholds = request.form.getlist("thresholds")
     
     title = f"Timeless jewel viewer: {name}"
     title += f" {seeds}" if seeds else ""
@@ -62,18 +56,10 @@ def search():
         }
     }
 
-    if affix:
-        mod = search_by_affix(affix)
-        if threshold:
-            threshold = float(threshold)
-        else:
-            threshold = 0
-
     affixes_thresholds = {}
-    # for mod, threshold in zip(affixes.split(','), thresholds.split(',')):
-    #     if mod:
-    #         mod = search_by_affix(mod)
-    affixes_thresholds[f'summed.{mod}'] = {"$gte": threshold} if threshold else None
+    for affix, threshold in zip(affixes, thresholds):
+        if affix:
+            affixes_thresholds[f'summed.{affix}'] = {"$gte": float(threshold)} if threshold else {'$gte': 0.01}
     
     for socket_id in socket_ids.split(','):
         # skip if socket_id is not valid
@@ -81,10 +67,10 @@ def search():
             continue
         for seed in seeds.split(','):
             # skip if seed is not within roll range
-            # if seed != "" and not (constraints.get(name).get("min") <= int(seed) <= constraints.get(name).get("max")):
-            #     continue
-            # if seed != "" and name == "Elegant Hubris" and (int(seed) % 10 != 0):
-            #     continue
+            if seed != "" and not (constraints.get(name).get("min") <= int(seed) <= constraints.get(name).get("max")):
+                continue
+            if seed != "" and name == "Elegant Hubris" and (int(seed) % 10 != 0):
+                continue
 
             search_dict = {}
             search_dict["name"] = name
