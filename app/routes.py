@@ -24,12 +24,21 @@ def index():
 @app.route('/search', methods=['POST'])
 def search():
     jewels = []
+    JEWEL_SOCKETS_COUNT = 21
     name = str(request.form.get("name")).title()
     seeds = request.form.get("seeds")
     socket_ids = request.form.get("socketIDs")
     affixes = request.form.getlist("affixes")
     thresholds = request.form.getlist("thresholds")
-    
+    latest = request.form.get("latest")
+
+    if latest:
+        sockets_count = len(socket_ids.split(','))
+        sockets_count = sockets_count if sockets_count >= 1 else JEWEL_SOCKETS_COUNT
+        latest = int(latest) * sockets_count
+    else:
+        latest = 200 * JEWEL_SOCKETS_COUNT
+
     title = f"Timeless jewel viewer: {name}"
     title += f" {seeds}" if seeds else ""
 
@@ -80,7 +89,7 @@ def search():
                 search_dict["socket_id"] = int(socket_id)
             search_dict.update(affixes_thresholds)
 
-            for jewel in mongo.db.jewels.find(search_dict).sort("created", pymongo.DESCENDING):
+            for jewel in mongo.db.jewels.find(search_dict).sort([("$natural", -1)]).limit(latest):
                 jewels.append(jewel)
 
     return render_template("index.html", title=title, jewels=jewels)
