@@ -1,12 +1,13 @@
 import json
+import os
 
-from flask import render_template, request, url_for, jsonify
-from flask_pymongo import PyMongo
 import pymongo
+from flask import (jsonify, render_template, request, send_from_directory,
+                   url_for)
+from flask_pymongo import PyMongo
 from fuzzywuzzy import fuzz
 
 from app import app
-
 
 mongo = PyMongo(app)
 summed_mods = []
@@ -37,7 +38,7 @@ def search():
         sockets_count = sockets_count if sockets_count >= 1 else JEWEL_SOCKETS_COUNT
         latest = int(latest) * sockets_count
     else:
-        latest = 200 * JEWEL_SOCKETS_COUNT
+        latest = 10000 * JEWEL_SOCKETS_COUNT
 
     title = f"Timeless jewel viewer: {name}"
     title += f" {seeds}" if seeds else ""
@@ -123,3 +124,8 @@ def search_by_affix(affix):
             best_mod = mod
 
     return best_mod
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                          'favicon.png', mimetype='image/vnd.microsoft.icon')
