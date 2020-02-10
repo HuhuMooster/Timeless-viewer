@@ -1,31 +1,22 @@
-import json
 import os
 
 import pymongo
-from flask import (jsonify, render_template, request, send_from_directory,
-                   url_for)
+from flask import current_app as app
+from flask import render_template, request, send_from_directory
 from flask_pymongo import PyMongo
-from fuzzywuzzy import fuzz
 
 from app import app
 
 mongo = PyMongo(app)
-summed_mods = []
-with open("affixes.txt") as f:
-    for line in f.readlines():
-        summed_mods.append(line[:-1])
 
 @app.route('/')
 def index():
     title = 'Timeless jewel viewer'
-    if request.method == "POST":
-        return jsonify(request.form)
     return render_template("index.html", title=title)
 
 @app.route('/search', methods=['POST'])
 def search():
     jewels = []
-    JEWEL_SOCKETS_COUNT = 21
     name = str(request.form.get("name")).title()
     seeds = request.form.get("seeds")
     socket_ids = request.form.get("socketIDs")
@@ -33,17 +24,7 @@ def search():
     thresholds = request.form.getlist("thresholds")
     latest = request.form.get("latest")
 
-    if latest:
-        sockets_count = len(socket_ids.split(','))
-        sockets_count = sockets_count if sockets_count >= 1 else JEWEL_SOCKETS_COUNT
-        latest = int(latest) * sockets_count
-    else:
-        latest = 10000 * JEWEL_SOCKETS_COUNT
-
-    title = f"Timeless jewel viewer: {name}"
-    title += f" {seeds}" if seeds else ""
-
-    constraints = {
+    CONSTRAINTS = {
         "Brutal Restraint": {
             "min": 500,
             "max": 8000
@@ -65,6 +46,33 @@ def search():
             "max": 10000
         }
     }
+    JEWEL_SOCKETS_COUNT = 21
+    MAX_JEWEL_COUNT = int(
+        CONSTRAINTS.get("Brutal Restraint").get("max") - CONSTRAINTS.get("Brutal Restraint").get("min") +
+        (CONSTRAINTS.get("Elegant Hubris").get("max") / 10) - (CONSTRAINTS.get("Elegant Hubris").get("min") / 10) +
+        CONSTRAINTS.get("Glorious Vanity").get("max") - CONSTRAINTS.get("Glorious Vanity").get("min") +
+        CONSTRAINTS.get("Lethal Pride").get("max") - CONSTRAINTS.get("Lethal Pride").get("min") +
+        CONSTRAINTS.get("Militant Faith").get("max") - CONSTRAINTS.get("Militant Faith").get("min")
+    )
+    
+    search_terms = {
+        "name": name,
+        "seeds": seeds,
+        "socket_ids": socket_ids,
+        "affixes": affixes,
+        "thresholds": thresholds,
+        "latest": latest
+    }
+
+    if latest:
+        sockets_count = len(socket_ids.split(','))
+        sockets_count = sockets_count if sockets_count >= 1 else JEWEL_SOCKETS_COUNT
+        latest = int(latest) * sockets_count
+    else:
+        latest = MAX_JEWEL_COUNT * JEWEL_SOCKETS_COUNT
+
+    title = f"Timeless jewel viewer: {name}"
+    title += f" {seeds}" if seeds else ""
 
     affixes_thresholds = {}
     for affix, threshold in zip(affixes, thresholds):
@@ -76,8 +84,8 @@ def search():
         if socket_id and not (1 <= int(socket_id) <= 21):
             continue
         for seed in seeds.split(','):
-            # skip if seed is not within roll range
-            if seed != "" and not (constraints.get(name).get("min") <= int(seed) <= constraints.get(name).get("max")):
+            # skip if seed is not within the roll range
+            if seed != "" and not (CONSTRAINTS.get(name).get("min") <= int(seed) <= CONSTRAINTS.get(name).get("max")):
                 continue
             if seed != "" and name == "Elegant Hubris" and (int(seed) % 10 != 0):
                 continue
@@ -93,13 +101,13 @@ def search():
             for jewel in mongo.db.jewels.find(search_dict).sort([("$natural", -1)]).limit(latest):
                 jewels.append(jewel)
 
-    return render_template("index.html", title=title, jewels=jewels)
+    return render_template("index.html", title=title, search_terms=search_terms, jewels=jewels)
 
 @app.route('/analyzed', methods=['GET'])
 def analyzed():
     title = "Analyzed by date"
     latest_additions = {}
-    for jewel in mongo.db.jewels.find():
+    for jewel in mongo.db.jewels.find().sort([("$natural", -1)]):
         date = jewel['created'].strftime("%d.%m.%Y.")
         name = jewel['name']
         seed = jewel['seed']
@@ -111,19 +119,6 @@ def analyzed():
             latest_additions[date][name].append(seed)
 
     return render_template("analyzed.html", title=title, latest_additions=latest_additions)
-
-
-def search_by_affix(affix):
-    best_ratio = 0
-    best_mod = ""
-    for mod in summed_mods:
-        simplified_mod = mod.lower()
-        ratio = fuzz.partial_ratio(affix, simplified_mod)
-        if ratio > best_ratio:
-            best_ratio = ratio
-            best_mod = mod
-
-    return best_mod
 
 @app.route('/favicon.ico')
 def favicon():
